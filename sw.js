@@ -1,10 +1,10 @@
 const CACHE_NAME = 'boom-it-v2';
 const urlsToCache = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png',
+  '/boom-it/',
+  '/boom-it/index.html',
+  '/boom-it/manifest.json',
+  '/boom-it/icon-192.png',
+  '/boom-it/icon-512.png',
   'https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap'
 ];
 
