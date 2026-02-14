@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boom It Admin - Review Suggestions</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: #1A1A2E;
+            color: #FFF5E1;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #FF1744 0%, #FF6B9D 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-family: 'Space Mono', monospace;
+            color: #FFD600;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .stats {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            font-family: 'Space Mono', monospace;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #00E676;
+        }
+
+        .suggestion-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .suggestion-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .suggestion-card.question {
+            border-left: 4px solid #00E676;
+        }
+
+        .suggestion-card.penalty {
+            border-left: 4px solid #FFD600;
+        }
+
+        .type-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+        }
+
+        .type-badge.question {
+            background: #00E676;
+            color: #1A1A2E;
+        }
+
+        .type-badge.penalty {
+            background: #FFD600;
+            color: #1A1A2E;
+        }
+
+        .content {
+            font-size: 1.2rem;
+            margin: 1rem 0;
+            line-height: 1.5;
+        }
+
+        .timestamp {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            color: rgba(255, 245, 225, 0.5);
+            margin-bottom: 1rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-approve {
+            background: linear-gradient(135deg, #00E676 0%, #00BFA5 100%);
+            color: #1A1A2E;
+            flex: 1;
+        }
+
+        .btn-approve:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 230, 118, 0.4);
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #FFD600 0%, #FFAB00 100%);
+            color: #1A1A2E;
+            flex: 1;
+        }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 214, 0, 0.4);
+        }
+
+        .btn-reject {
+            background: rgba(255, 255, 255, 0.1);
+            color: #FFF5E1;
+        }
+
+        .btn-reject:hover {
+            background: rgba(255, 23, 68, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: rgba(255, 245, 225, 0.5);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .code-snippet {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1A1A2E;
+            padding: 2rem;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        textarea {
+            width: 100%;
+            padding: 1rem;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #FFF5E1;
+            resize: vertical;
+            min-height: 100px;
+            margin: 1rem 0;
+        }
+
+        .clear-all {
+            background: rgba(255, 23, 68, 0.2);
+            color: #FF1744;
+            padding: 0.8rem 1.5rem;
+            border: 1px solid rgba(255, 23, 68, 0.3);
+            border-radius: 10px;
+            margin-top: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .clear-all:hover {
+            background: rgba(255, 23, 68, 0.3);
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💣 Boom It Admin</h1>
+        <p class="subtitle">Review and approve suggestions</p>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalCount">0</div>
+                <div>Total Suggestions</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="questionCount">0</div>
+                <div>Questions</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="penaltyCount">0</div>
+                <div>Penalties</div>
+            </div>
+        </div>
+
+        <div id="suggestionsContainer"></div>
+
+        <button class="clear-all" onclick="clearAll()">🗑️ Clear All Suggestions</button>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 1rem;">Edit Suggestion</h2>
+            <textarea id="editTextarea"></textarea>
+            <div class="actions">
+                <button class="btn-approve" onclick="saveEdit()">Save & Approve</button>
+                <button class="btn-reject" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let suggestions = [];
+        let editingIndex = -1;
+
+        function loadSuggestions() {
+            suggestions = JSON.parse(localStorage.getItem('suggestions') || '[]');
+            displaySuggestions();
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('totalCount').textContent = suggestions.length;
+            document.getElementById('questionCount').textContent = 
+                suggestions.filter(s => s.type === 'question').length;
+            document.getElementById('penaltyCount').textContent = 
+                suggestions.filter(s => s.type === 'penalty').length;
+        }
+
+        function displaySuggestions() {
+            const container = document.getElementById('suggestionsContainer');
+            
+            if (suggestions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <h2>No suggestions yet!</h2>
+                        <p>Suggestions from the game will appear here.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = suggestions.map((s, i) => `
+                <div class="suggestion-card ${s.type}">
+                    <span class="type-badge ${s.type}">${s.type}</span>
+                    <div class="content">${escapeHtml(s.content)}</div>
+                    <div class="timestamp">Submitted: ${new Date(s.timestamp).toLocaleString()}</div>
+                    <div class="actions">
+                        <button class="btn-approve" onclick="approve(${i})">✓ Approve</button>
+                        <button class="btn-edit" onclick="edit(${i})">✎ Edit</button>
+                        <button class="btn-reject" onclick="reject(${i})">✕ Reject</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function approve(index) {
+            const suggestion = suggestions[index];
+            const arrayName = suggestion.type === 'question' ? 'questions' : 'penalties';
+            const code = `"${suggestion.content.replace(/"/g, '\\"')}"`;
+            
+            // Show code snippet to copy
+            const modal = document.getElementById('editModal');
+            const modalContent = modal.querySelector('.modal-content');
+            modalContent.innerHTML = `
+                <h2 style="margin-bottom: 1rem;">✓ Approved!</h2>
+                <p style="margin-bottom: 1rem;">Add this to your <code>index.html</code> in the <strong>${arrayName}</strong> array:</p>
+                <div class="code-snippet">
+                    <button class="copy-btn" onclick="copyCode('${code.replace(/'/g, "\\'")}')">Copy</button>
+                    ${code}
+                </div>
+                <div class="actions" style="margin-top: 1.5rem;">
+                    <button class="btn-approve" onclick="reject(${index}); closeModal();">Done - Remove from list</button>
+                    <button class="btn-reject" onclick="closeModal()">Keep in list</button>
+                </div>
+            `;
+            modal.classList.add('active');
+        }
+
+        function edit(index) {
+            editingIndex = index;
+            document.getElementById('editTextarea').value = suggestions[index].content;
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function saveEdit() {
+            const newContent = document.getElementById('editTextarea').value.trim();
+            if (newContent) {
+                suggestions[editingIndex].content = newContent;
+                localStorage.setItem('suggestions', JSON.stringify(suggestions));
+                closeModal();
+                approve(editingIndex);
+            }
+        }
+
+        function reject(index) {
+            if (confirm('Are you sure you want to reject this suggestion?')) {
+                suggestions.splice(index, 1);
+                localStorage.setItem('suggestions', JSON.stringify(suggestions));
+                loadSuggestions();
+            }
+        }
+
+        function clearAll() {
+            if (confirm('Are you sure you want to clear ALL suggestions? This cannot be undone!')) {
+                localStorage.removeItem('suggestions');
+                loadSuggestions();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+            const modalContent = document.querySelector('.modal-content');
+            modalContent.innerHTML = `
+                <h2 style="margin-bottom: 1rem;">Edit Suggestion</h2>
+                <textarea id="editTextarea"></textarea>
+                <div class="actions">
+                    <button class="btn-approve" onclick="saveEdit()">Save & Approve</button>
+                    <button class="btn-reject" onclick="closeModal()">Cancel</button>
+                </div>
+            `;
+        }
+
+        function copyCode(code) {
+            navigator.clipboard.writeText(code.replace(/\\'/g, "'")).then(() => {
+                alert('Copied to clipboard!');
+            });
+        }
+
+        // Load on page load
+        loadSuggestions();
+    </script>
+</body>
+</html>

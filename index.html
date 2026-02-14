@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boom It! 💣</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF1744">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF1744;
+            --secondary: #FFD600;
+            --accent: #00E676;
+            --dark: #1A1A2E;
+            --light: #FFF5E1;
+            --gradient-1: linear-gradient(135deg, #FF1744 0%, #FF6B9D 100%);
+            --gradient-2: linear-gradient(135deg, #FFD600 0%, #FFAB00 100%);
+            --gradient-3: linear-gradient(135deg, #00E676 0%, #00BFA5 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: var(--dark);
+            color: var(--light);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(255, 23, 68, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(255, 214, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(0, 230, 118, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 500px;
+            min-height: 100vh;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .logo {
+            font-size: 4rem;
+            font-weight: 700;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 1rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .subtitle {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--secondary);
+            text-align: center;
+            margin-bottom: 3rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1.5rem;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: var(--gradient-1);
+            color: white;
+            box-shadow: 0 10px 30px rgba(255, 23, 68, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 23, 68, 0.5);
+        }
+
+        .btn-secondary {
+            background: var(--gradient-2);
+            color: var(--dark);
+            box-shadow: 0 10px 30px rgba(255, 214, 0, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 214, 0, 0.4);
+        }
+
+        .btn-accent {
+            background: var(--gradient-3);
+            color: var(--dark);
+            box-shadow: 0 10px 30px rgba(0, 230, 118, 0.3);
+        }
+
+        .btn-accent:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 230, 118, 0.4);
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 3rem 2rem;
+            width: 100%;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.02);
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .question-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 1rem;
+        }
+
+        .question-text {
+            font-size: 1.8rem;
+            font-weight: 600;
+            line-height: 1.4;
+            color: var(--light);
+            position: relative;
+            z-index: 1;
+        }
+
+        .timer {
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            color: var(--secondary);
+            margin-top: 2rem;
+            animation: blink 1s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .boom-screen {
+            animation: boom 0.5s ease-out;
+        }
+
+        @keyframes boom {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .boom-emoji {
+            font-size: 6rem;
+            margin-bottom: 1rem;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+        }
+
+        .penalty-text {
+            font-size: 1.6rem;
+            font-weight: 600;
+            line-height: 1.4;
+            color: var(--light);
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .radio-btn {
+            flex: 1;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            color: var(--light);
+        }
+
+        .radio-btn.selected {
+            background: var(--gradient-1);
+            border-color: var(--primary);
+            box-shadow: 0 5px 20px rgba(255, 23, 68, 0.4);
+        }
+
+        textarea {
+            width: 100%;
+            padding: 1rem;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            color: var(--light);
+            resize: vertical;
+            min-height: 100px;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(0, 230, 118, 0.2);
+        }
+
+        textarea::placeholder {
+            color: rgba(255, 245, 225, 0.4);
+        }
+
+        .success-message {
+            background: var(--gradient-3);
+            color: var(--dark);
+            padding: 1rem;
+            border-radius: 15px;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .btn-small {
+            padding: 1rem;
+            font-size: 1rem;
+        }
+
+        .back-btn {
+            margin-top: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            box-shadow: none;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 3rem;
+            }
+            
+            .question-text {
+                font-size: 1.5rem;
+            }
+            
+            .btn {
+                padding: 1.2rem;
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Home Screen -->
+        <div id="homeScreen" class="screen active">
+            <h1 class="logo">BOOM IT! 💣</h1>
+            <p class="subtitle">Pass it before it blows</p>
+            <button class="btn btn-primary" onclick="startGame()">Start Game</button>
+            <button class="btn btn-secondary" onclick="showSuggestScreen()">Suggest Questions/Penalties</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="screen">
+            <div class="game-card" onclick="nextQuestion()">
+                <p class="question-label">Most Likely To...</p>
+                <p class="question-text" id="questionText"></p>
+                <p class="timer">⏱️ Tap to pass</p>
+            </div>
+            <button class="btn back-btn btn-small" onclick="showHome()">End Game</button>
+        </div>
+
+        <!-- Boom Screen -->
+        <div id="boomScreen" class="screen boom-screen">
+            <div class="boom-emoji">💥</div>
+            <h2 style="font-size: 3rem; margin-bottom: 2rem; color: var(--primary);">BOOM!</h2>
+            <p class="penalty-text" id="penaltyText"></p>
+            <button class="btn btn-primary" onclick="startGame()">New Round</button>
+            <button class="btn back-btn btn-small" onclick="showHome()">Home</button>
+        </div>
+
+        <!-- Suggest Screen -->
+        <div id="suggestScreen" class="screen">
+            <h2 style="font-size: 2rem; margin-bottom: 2rem;">Suggest Content</h2>
+            
+            <div id="successMessage" class="success-message" style="display: none;">
+                ✓ Submitted! Suggest another?
+            </div>
+
+            <div class="form-group">
+                <label>Type</label>
+                <div class="radio-group">
+                    <div class="radio-btn selected" onclick="selectType('question')">Question</div>
+                    <div class="radio-btn" onclick="selectType('penalty')">Penalty</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label id="inputLabel">Most Likely To...</label>
+                <textarea id="suggestionInput" placeholder="Enter your suggestion here..."></textarea>
+            </div>
+
+            <button class="btn btn-accent" onclick="submitSuggestion()">Submit</button>
+            <button class="btn back-btn btn-small" onclick="showHome()">Back to Home</button>
+        </div>
+    </div>
+
+    <script>
+        // Initial question and penalty banks (small starter set)
+        const questions = [
+            "accidentally send a text to the wrong person",
+            "become a millionaire",
+            "survive a zombie apocalypse",
+            "win a hot dog eating contest",
+            "get lost in their own neighborhood"
+        ];
+
+        const penalties = [
+            "Do 10 pushups",
+            "Tell an embarrassing story",
+            "Let the group read your last text message",
+            "Do your best impression of someone in the room",
+            "Dance for 30 seconds with no music"
+        ];
+
+        let currentType = 'question';
+        let questionCount = 0;
+        let boomThreshold = 0;
+
+        function showHome() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('homeScreen').classList.add('active');
+        }
+
+        function startGame() {
+            questionCount = 0;
+            boomThreshold = Math.floor(Math.random() * 5) + 5; // Random between 5-9
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('gameScreen').classList.add('active');
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            questionCount++;
+            
+            if (questionCount >= boomThreshold) {
+                showBoom();
+                return;
+            }
+
+            const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+            document.getElementById('questionText').textContent = randomQuestion;
+        }
+
+        function showBoom() {
+            const randomPenalty = penalties[Math.floor(Math.random() * penalties.length)];
+            document.getElementById('penaltyText').textContent = randomPenalty;
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('boomScreen').classList.add('active');
+        }
+
+        function showSuggestScreen() {
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('suggestionInput').value = '';
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('suggestScreen').classList.add('active');
+        }
+
+        function selectType(type) {
+            currentType = type;
+            document.querySelectorAll('.radio-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+            
+            if (type === 'question') {
+                document.getElementById('inputLabel').textContent = 'Most Likely To...';
+                document.getElementById('suggestionInput').placeholder = 'e.g., forget their own birthday';
+            } else {
+                document.getElementById('inputLabel').textContent = 'Penalty';
+                document.getElementById('suggestionInput').placeholder = 'e.g., Sing the national anthem';
+            }
+        }
+
+        async function submitSuggestion() {
+            const input = document.getElementById('suggestionInput').value.trim();
+            
+            if (!input) {
+                alert('Please enter a suggestion!');
+                return;
+            }
+
+            // Create a GitHub issue with the suggestion
+            const issueTitle = `[${currentType.toUpperCase()}] ${input.substring(0, 50)}${input.length > 50 ? '...' : ''}`;
+            const issueBody = `**Type:** ${currentType}\n\n**Suggestion:** ${input}\n\n---\n*Submitted via Boom It game*`;
+            
+            // Store in localStorage for now (you'll review these manually in GitHub issues)
+            const suggestions = JSON.parse(localStorage.getItem('suggestions') || '[]');
+            suggestions.push({
+                type: currentType,
+                content: input,
+                timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('suggestions', JSON.stringify(suggestions));
+
+            // Show success message
+            document.getElementById('successMessage').style.display = 'block';
+            document.getElementById('suggestionInput').value = '';
+            
+            setTimeout(() => {
+                document.getElementById('successMessage').style.display = 'none';
+            }, 3000);
+        }
+
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => {
+                console.log('Service worker registration failed:', err);
+            });
+        }
+    </script>
+</body>
+</html>
