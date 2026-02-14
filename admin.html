@@ -241,19 +241,26 @@
             margin: 1rem 0;
         }
 
-        .clear-all {
-            background: rgba(255, 23, 68, 0.2);
-            color: #FF1744;
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: rgba(255, 245, 225, 0.5);
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #00E676 0%, #00BFA5 100%);
+            color: #1A1A2E;
             padding: 0.8rem 1.5rem;
-            border: 1px solid rgba(255, 23, 68, 0.3);
+            border: none;
             border-radius: 10px;
-            margin-top: 2rem;
+            margin-bottom: 2rem;
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
-        .clear-all:hover {
-            background: rgba(255, 23, 68, 0.3);
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 230, 118, 0.4);
         }
 
         @media (max-width: 600px) {
@@ -276,6 +283,8 @@
         <h1>💣 Boom It Admin</h1>
         <p class="subtitle">Review and approve suggestions</p>
 
+        <button class="refresh-btn" onclick="loadSuggestions()">🔄 Refresh</button>
+
         <div class="stats">
             <div class="stat-item">
                 <div class="stat-number" id="totalCount">0</div>
@@ -291,9 +300,9 @@
             </div>
         </div>
 
-        <div id="suggestionsContainer"></div>
-
-        <button class="clear-all" onclick="clearAll()">🗑️ Clear All Suggestions</button>
+        <div id="suggestionsContainer">
+            <div class="loading">Loading suggestions...</div>
+        </div>
     </div>
 
     <!-- Edit Modal -->
@@ -308,16 +317,75 @@
         </div>
     </div>
 
-    <script>
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getFirestore, collection, getDocs, deleteDoc, doc, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+        // TODO: Replace with YOUR Firebase config (same as index.html)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
         let suggestions = [];
-        let editingIndex = -1;
+        let editingId = null;
 
-        function loadSuggestions() {
-            suggestions = JSON.parse(localStorage.getItem('suggestions') || '[]');
-            displaySuggestions();
-            updateStats();
-        }
+        // Load suggestions from Firebase
+        window.loadSuggestions = async function() {
+            try {
+                const q = query(collection(db, 'suggestions'), orderBy('timestamp', 'desc'));
+                const querySnapshot = await getDocs(q);
+                
+                suggestions = [];
+                querySnapshot.forEach((doc) => {
+                    suggestions.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                
+                displaySuggestions();
+                updateStats();
+            } catch (error) {
+                console.error('Error loading suggestions:', error);
+                document.getElementById('suggestionsContainer').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <h2>Error loading suggestions</h2>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        };
 
+        // Delete suggestion from Firebase
+        window.deleteSuggestion = async function(id) {
+            try {
+                await deleteDoc(doc(db, 'suggestions', id));
+                await loadSuggestions();
+            } catch (error) {
+                console.error('Error deleting suggestion:', error);
+                alert('Error deleting suggestion: ' + error.message);
+            }
+        };
+
+        // Make functions available globally
+        window.db = db;
+        
+        // Load suggestions on page load
+        loadSuggestions();
+    </script>
+
+    <script>
         function updateStats() {
             document.getElementById('totalCount').textContent = suggestions.length;
             document.getElementById('questionCount').textContent = 
@@ -332,7 +400,7 @@
             if (suggestions.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-state-icon">📭</div>
+                        <div class="empty-state-icon">🔭</div>
                         <h2>No suggestions yet!</h2>
                         <p>Suggestions from the game will appear here.</p>
                     </div>
@@ -340,15 +408,15 @@
                 return;
             }
 
-            container.innerHTML = suggestions.map((s, i) => `
+            container.innerHTML = suggestions.map((s) => `
                 <div class="suggestion-card ${s.type}">
                     <span class="type-badge ${s.type}">${s.type}</span>
                     <div class="content">${escapeHtml(s.content)}</div>
-                    <div class="timestamp">Submitted: ${new Date(s.timestamp).toLocaleString()}</div>
+                    <div class="timestamp">Submitted: ${s.timestamp ? new Date(s.timestamp.toDate()).toLocaleString() : 'Unknown'}</div>
                     <div class="actions">
-                        <button class="btn-approve" onclick="approve(${i})">✓ Approve</button>
-                        <button class="btn-edit" onclick="edit(${i})">✎ Edit</button>
-                        <button class="btn-reject" onclick="reject(${i})">✕ Reject</button>
+                        <button class="btn-approve" onclick="approve('${s.id}', '${s.type}', \`${escapeForJs(s.content)}\`)">✓ Approve</button>
+                        <button class="btn-edit" onclick="edit('${s.id}', \`${escapeForJs(s.content)}\`)">✎ Edit</button>
+                        <button class="btn-reject" onclick="reject('${s.id}')">✕ Reject</button>
                     </div>
                 </div>
             `).join('');
@@ -360,10 +428,13 @@
             return div.innerHTML;
         }
 
-        function approve(index) {
-            const suggestion = suggestions[index];
-            const arrayName = suggestion.type === 'question' ? 'questions' : 'penalties';
-            const code = `"${suggestion.content.replace(/"/g, '\\"')}"`;
+        function escapeForJs(text) {
+            return text.replace(/`/g, '\\`').replace(/\$/g, '\\$');
+        }
+
+        function approve(id, type, content) {
+            const arrayName = type === 'question' ? 'questions' : 'penalties';
+            const code = `"${content.replace(/"/g, '\\"')}"`;
             
             // Show code snippet to copy
             const modal = document.getElementById('editModal');
@@ -372,69 +443,63 @@
                 <h2 style="margin-bottom: 1rem;">✓ Approved!</h2>
                 <p style="margin-bottom: 1rem;">Add this to your <code>index.html</code> in the <strong>${arrayName}</strong> array:</p>
                 <div class="code-snippet">
-                    <button class="copy-btn" onclick="copyCode('${code.replace(/'/g, "\\'")}')">Copy</button>
-                    ${code}
+                    <button class="copy-btn" onclick="copyCode(\`${code}\`)">Copy</button>
+                    ${escapeHtml(code)}
                 </div>
                 <div class="actions" style="margin-top: 1.5rem;">
-                    <button class="btn-approve" onclick="reject(${index}); closeModal();">Done - Remove from list</button>
+                    <button class="btn-approve" onclick="rejectAndClose('${id}')">Done - Remove from list</button>
                     <button class="btn-reject" onclick="closeModal()">Keep in list</button>
                 </div>
             `;
             modal.classList.add('active');
         }
 
-        function edit(index) {
-            editingIndex = index;
-            document.getElementById('editTextarea').value = suggestions[index].content;
-            document.getElementById('editModal').classList.add('active');
-        }
-
-        function saveEdit() {
-            const newContent = document.getElementById('editTextarea').value.trim();
-            if (newContent) {
-                suggestions[editingIndex].content = newContent;
-                localStorage.setItem('suggestions', JSON.stringify(suggestions));
-                closeModal();
-                approve(editingIndex);
-            }
-        }
-
-        function reject(index) {
-            if (confirm('Are you sure you want to reject this suggestion?')) {
-                suggestions.splice(index, 1);
-                localStorage.setItem('suggestions', JSON.stringify(suggestions));
-                loadSuggestions();
-            }
-        }
-
-        function clearAll() {
-            if (confirm('Are you sure you want to clear ALL suggestions? This cannot be undone!')) {
-                localStorage.removeItem('suggestions');
-                loadSuggestions();
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('editModal').classList.remove('active');
-            const modalContent = document.querySelector('.modal-content');
+        function edit(id, content) {
+            editingId = id;
+            document.getElementById('editTextarea').value = content;
+            const modal = document.getElementById('editModal');
+            const modalContent = modal.querySelector('.modal-content');
             modalContent.innerHTML = `
                 <h2 style="margin-bottom: 1rem;">Edit Suggestion</h2>
-                <textarea id="editTextarea"></textarea>
+                <textarea id="editTextarea">${escapeHtml(content)}</textarea>
                 <div class="actions">
                     <button class="btn-approve" onclick="saveEdit()">Save & Approve</button>
                     <button class="btn-reject" onclick="closeModal()">Cancel</button>
                 </div>
             `;
+            modal.classList.add('active');
+        }
+
+        function saveEdit() {
+            const newContent = document.getElementById('editTextarea').value.trim();
+            if (newContent && editingId) {
+                const suggestion = suggestions.find(s => s.id === editingId);
+                if (suggestion) {
+                    approve(editingId, suggestion.type, newContent);
+                }
+            }
+        }
+
+        function reject(id) {
+            if (confirm('Are you sure you want to reject this suggestion?')) {
+                deleteSuggestion(id);
+            }
+        }
+
+        function rejectAndClose(id) {
+            deleteSuggestion(id);
+            closeModal();
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
         }
 
         function copyCode(code) {
-            navigator.clipboard.writeText(code.replace(/\\'/g, "'")).then(() => {
+            navigator.clipboard.writeText(code).then(() => {
                 alert('Copied to clipboard!');
             });
         }
-
-        // Load on page load
-        loadSuggestions();
     </script>
 </body>
 </html>
