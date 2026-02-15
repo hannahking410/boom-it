@@ -1,4 +1,4 @@
-const CACHE_NAME = 'boom-it-v2';
+const CACHE_NAME = 'boom-it-v3';  // Changed from v2 to v3 to force update
 const urlsToCache = [
   '/boom-it/',
   '/boom-it/index.html',
