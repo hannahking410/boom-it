@@ -579,14 +579,23 @@
         // Register service worker for PWA (only if supported)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/boom-it/sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registered:', registration);
-                    })
-                    .catch(err => {
-                        console.log('ServiceWorker registration failed:', err);
-                    });
-            });
+                navigator.serviceWorker.register('/boom-it/sw.js').then(reg => {
+                    // Check for updates every time the page loads
+                    reg.update(); 
+            
+                    reg.onupdatefound = () => {
+                        const installingWorker = reg.installing;
+                        installingWorker.onstatechange = () => {
+                            if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // This tells the user a new version is ready
+                                if(confirm("New version available! Reload to update?")) {
+                                    window.location.reload();
+                                }
+                            }
+                        };
+                    };
+                });
+            });     
         }
     </script>
 </body>
