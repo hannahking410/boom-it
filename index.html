@@ -422,8 +422,8 @@
             <div class="form-group">
                 <label>Type</label>
                 <div class="radio-group">
-                    <div class="radio-btn selected" onclick="selectType('question')">Question</div>
-                    <div class="radio-btn" onclick="selectType('penalty')">Penalty</div>
+                    <div class="radio-btn selected" onclick="selectType(event, 'question')">Question</div>
+                    <div class="radio-btn" onclick="selectType(event, 'penalty')">Penalty</div>
                 </div>
             </div>
 
@@ -536,14 +536,17 @@
         function selectType(type) {
             currentType = type;
             document.querySelectorAll('.radio-btn').forEach(btn => btn.classList.remove('selected'));
-            event.target.classList.add('selected');
+            e.currentTarget.classList.add('selected');
+
+            const label = document.getElementById('inputLabel');
+            const input = document.getElementById('suggestionInput');
             
             if (type === 'question') {
-                document.getElementById('inputLabel').textContent = 'Most Likely To...';
-                document.getElementById('suggestionInput').placeholder = 'e.g., forget their own birthday';
+                label.textContent = 'Most Likely To...';
+                input.placeholder = 'e.g., forget their own birthday';
             } else {
-                document.getElementById('inputLabel').textContent = 'Penalty';
-                document.getElementById('suggestionInput').placeholder = 'e.g., Sing the national anthem';
+                label.textContent = 'Penalty';
+                input.placeholder = 'e.g., Sing the national anthem';
             }
         }
 
